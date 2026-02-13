@@ -10,21 +10,70 @@ import Workouts from './components/Workouts';
 function Home() {
   return (
     <div className="container mt-4">
-      <h1>Welcome to OctoFit Tracker</h1>
-      <p className="lead">Track your fitness activities, compete with your team, and achieve your goals!</p>
-      <div className="row mt-4">
-        <div className="col-md-6">
-          <h3>Features</h3>
-          <ul>
-            <li>Track your daily activities</li>
-            <li>Join or create teams</li>
-            <li>Compete on the leaderboard</li>
-            <li>Get personalized workout suggestions</li>
-          </ul>
+      <div className="text-center mb-5">
+        <h1>🏃‍♂️ Welcome to OctoFit Tracker</h1>
+        <p className="lead">Track your fitness activities, compete with your team, and achieve your goals!</p>
+      </div>
+      
+      <div className="row g-4 mb-5">
+        <div className="col-md-6 col-lg-3">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <div style={{fontSize: '3rem'}}>📊</div>
+              <h5 className="card-title mt-3">Track Activities</h5>
+              <p className="card-text">Log your daily workouts and monitor your progress</p>
+              <Link to="/activities" className="btn btn-primary btn-sm">View Activities</Link>
+            </div>
+          </div>
         </div>
-        <div className="col-md-6">
-          <h3>Get Started</h3>
-          <p>Use the navigation menu above to explore different sections of the app.</p>
+        
+        <div className="col-md-6 col-lg-3">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <div style={{fontSize: '3rem'}}>👥</div>
+              <h5 className="card-title mt-3">Join Teams</h5>
+              <p className="card-text">Create or join teams and work together</p>
+              <Link to="/teams" className="btn btn-primary btn-sm">Browse Teams</Link>
+            </div>
+          </div>
+        </div>
+        
+        <div className="col-md-6 col-lg-3">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <div style={{fontSize: '3rem'}}>🏆</div>
+              <h5 className="card-title mt-3">Compete</h5>
+              <p className="card-text">Check rankings and compete with others</p>
+              <Link to="/leaderboard" className="btn btn-primary btn-sm">View Leaderboard</Link>
+            </div>
+          </div>
+        </div>
+        
+        <div className="col-md-6 col-lg-3">
+          <div className="card text-center h-100">
+            <div className="card-body">
+              <div style={{fontSize: '3rem'}}>💪</div>
+              <h5 className="card-title mt-3">Get Workouts</h5>
+              <p className="card-text">Personalized workout recommendations</p>
+              <Link to="/workouts" className="btn btn-primary btn-sm">Get Workouts</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="row mt-5">
+        <div className="col-lg-8 mx-auto">
+          <div className="card bg-light">
+            <div className="card-body">
+              <h3 className="text-center mb-4">🚀 Get Started</h3>
+              <p className="text-center">Use the navigation menu above to explore different sections of the app.</p>
+              <div className="d-flex justify-content-center gap-3 flex-wrap mt-4">
+                <Link to="/users" className="btn btn-outline-primary">View Users</Link>
+                <Link to="/teams" className="btn btn-outline-primary">Explore Teams</Link>
+                <Link to="/activities" className="btn btn-outline-primary">Track Activities</Link>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -40,14 +40,36 @@ function Activities() {
     fetchActivities();
   }, []);
 
-  if (loading) return <div className="container mt-4"><p>Loading activities...</p></div>;
-  if (error) return <div className="container mt-4"><p>Error: {error}</p></div>;
+  if (loading) {
+    return (
+      <div className="container mt-4">
+        <div className="spinner-container">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-muted">Loading activities...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="container mt-4">
+        <div className="alert alert-danger" role="alert">
+          <h4 className="alert-heading">Error!</h4>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
-      <h2>Activities</h2>
+      <h2>🏃 Activities</h2>
+      <p className="text-muted mb-4">Track all fitness activities across the community</p>
       <div className="table-responsive">
-        <table className="table table-striped">
+        <table className="table table-hover">
           <thead>
             <tr>
               <th>User</th>
@@ -59,18 +81,33 @@ function Activities() {
             </tr>
           </thead>
           <tbody>
-            {activities.map(activity => (
-              <tr key={activity.id}>
-                <td>{activity.user_username || 'N/A'}</td>
-                <td>{activity.activity_type}</td>
-                <td>{activity.duration}</td>
-                <td>{activity.distance ? activity.distance.toFixed(2) : '0.00'}</td>
-                <td>{activity.calories_burned}</td>
-                <td>{new Date(activity.date).toLocaleDateString()}</td>
+            {activities.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center text-muted py-4">
+                  No activities found
+                </td>
               </tr>
-            ))}
+            ) : (
+              activities.map(activity => (
+                <tr key={activity.id}>
+                  <td><strong>{activity.user_username || 'N/A'}</strong></td>
+                  <td>
+                    <span className="badge bg-info">{activity.activity_type}</span>
+                  </td>
+                  <td>{activity.duration}</td>
+                  <td>{activity.distance ? activity.distance.toFixed(2) : '0.00'}</td>
+                  <td>
+                    <span className="badge bg-warning text-dark">{activity.calories_burned} cal</span>
+                  </td>
+                  <td>{new Date(activity.date).toLocaleDateString()}</td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
+      </div>
+      <div className="mt-3">
+        <p className="text-muted">Total Activities: <strong>{activities.length}</strong></p>
       </div>
     </div>
   );

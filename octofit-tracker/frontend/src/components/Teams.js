@@ -40,28 +40,59 @@ function Teams() {
     fetchTeams();
   }, []);
 
-  if (loading) return <div className="container mt-4"><p>Loading teams...</p></div>;
-  if (error) return <div className="container mt-4"><p>Error: {error}</p></div>;
+  if (loading) {
+    return (
+      <div className="container mt-4">
+        <div className="spinner-container">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-muted">Loading teams...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div className="container mt-4">
+        <div className="alert alert-danger" role="alert">
+          <h4 className="alert-heading">Error!</h4>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mt-4">
-      <h2>Teams</h2>
-      <div className="row">
-        {teams.map(team => (
-          <div key={team.id} className="col-md-6 col-lg-4 mb-4">
-            <div className="card">
-              <div className="card-body">
-                <h5 className="card-title">{team.name}</h5>
-                <p className="card-text">{team.description}</p>
-                <p className="card-text">
+      <h2>🏆 Teams</h2>
+      <p className="text-muted mb-4">Join a team and compete together</p>
+      {teams.length === 0 ? (
+        <div className="alert alert-info" role="alert">
+          No teams available yet. Be the first to create one!
+        </div>
+      ) : (
+        <div className="row">
+          {teams.map(team => (
+            <div key={team.id} className="col-md-6 col-lg-4 mb-4">
+              <div className="card h-100">
+                <div className="card-body">
+                  <h5 className="card-title">{team.name}</h5>
+                  <p className="card-text">{team.description}</p>
+                </div>
+                <div className="card-footer bg-transparent border-top-0">
                   <small className="text-muted">
-                    Created: {new Date(team.created_at).toLocaleDateString()}
+                    📅 Created: {new Date(team.created_at).toLocaleDateString()}
                   </small>
-                </p>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
+      )}
+      <div className="mt-3">
+        <p className="text-muted">Total Teams: <strong>{teams.length}</strong></p>
       </div>
     </div>
   );
