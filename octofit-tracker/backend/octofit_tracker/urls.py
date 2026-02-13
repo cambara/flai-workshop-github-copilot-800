@@ -19,7 +19,6 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.reverse import reverse
 from .views import (
     UserViewSet, TeamViewSet, ActivityViewSet,
     LeaderboardViewSet, WorkoutViewSet
@@ -47,11 +46,11 @@ def api_root(request, format=None):
     API root endpoint that lists all available endpoints
     """
     return Response({
-        'users': request.build_absolute_uri(reverse('user-list')),
-        'teams': request.build_absolute_uri(reverse('team-list')),
-        'activities': request.build_absolute_uri(reverse('activity-list')),
-        'leaderboard': request.build_absolute_uri(reverse('leaderboard-list')),
-        'workouts': request.build_absolute_uri(reverse('workout-list')),
+        'users': f"{base_url}/api/users/",
+        'teams': f"{base_url}/api/teams/",
+        'activities': f"{base_url}/api/activities/",
+        'leaderboard': f"{base_url}/api/leaderboard/",
+        'workouts': f"{base_url}/api/workouts/",
     })
 
 
