@@ -4,16 +4,30 @@ function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [sortBy, setSortBy] = useState('name'); // Default sort by name
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const pageSize = 10;
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        setLoading(true);
         const codespaceName = process.env.REACT_APP_CODESPACE_NAME;
-        const apiUrl = codespaceName 
+        
+        // Determine ordering parameter based on sort selection
+        // Only name can be handled by backend ordering
+        // team and activity_date will be sorted client-side after fetch
+        const orderingParam = 'name'; // Always use name for consistent pagination
+        
+        const baseUrl = codespaceName 
           ? `https://${codespaceName}-8000.app.github.dev/api/users/` 
           : 'http://localhost:8000/api/users/';
         
-        console.log('Fetching users from:', apiUrl);
+        const apiUrl = `${baseUrl}?page=${currentPage}&ordering=${orderingParam}`;
+        
+        console.log('Fetching users from:', apiUrl, 'with client-side sort:', sortBy);
         
         const response = await fetch(apiUrl);
         
@@ -24,11 +38,13 @@ function Users() {
         const data = await response.json();
         console.log('Users API Response:', data);
         
-        // Handle both paginated (.results) and plain array responses
+        // Handle paginated response
         const usersData = data.results || data;
         console.log('Processed users data:', usersData);
         
         setUsers(usersData);
+        setTotalCount(data.count || usersData.length);
+        setTotalPages(Math.ceil((data.count || usersData.length) / pageSize));
         setLoading(false);
       } catch (err) {
         console.error('Error fetching users:', err);
@@ -38,7 +54,7 @@ function Users() {
     };
 
     fetchUsers();
-  }, []);
+  }, [currentPage, pageSize]);
 
   if (loading) {
     return (
@@ -64,6 +80,57 @@ function Users() {
     );
   }
 
+  // Sort users based on selected option
+  // All sorting is done client-side on the current page of results
+  const sortedUsers = (() => {
+    const usersCopy = [...users];
+    
+    switch (sortBy) {
+      case 'name':
+        return usersCopy.sort((a, b) => {
+          return (a.name || '').localeCompare(b.name || '');
+        });
+      
+      case 'team':
+        return usersCopy.sort((a, b) => {
+          return (a.team_name || '').localeCompare(b.team_name || '');
+        });
+      
+      case 'activity_date':
+        return usersCopy.sort((a, b) => {
+          // Get the most recent activity date for each user
+          const getLatestActivityDate = (user) => {
+            if (!user.activities || !Array.isArray(user.activities) || user.activities.length === 0) {
+              return new Date(0); // Return epoch for users with no activities
+            }
+            const dates = user.activities
+              .filter(activity => activity && activity.date)
+              .map(activity => new Date(activity.date));
+            return dates.length > 0 ? new Date(Math.max(...dates)) : new Date(0);
+          };
+          
+          const dateA = getLatestActivityDate(a);
+          const dateB = getLatestActivityDate(b);
+          return dateB - dateA; // Most recent first
+        });
+      
+      default:
+        return usersCopy;
+    }
+  })();
+
+  const handleSortChange = (newSortBy) => {
+    setSortBy(newSortBy);
+    setCurrentPage(1); // Reset to first page when sorting changes
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="container mt-4" style={{ 
       minHeight: '100vh',
@@ -72,13 +139,38 @@ function Users() {
       <h2>👥 Users</h2>
       <p className="text-muted mb-4">View all registered users in the OctoFit community</p>
       
+      {/* Sort Menu */}
+      <div className="mb-4">
+        <div className="d-flex align-items-center gap-3">
+          <label htmlFor="sortSelect" className="form-label mb-0 fw-bold">
+            Sort by:
+          </label>
+          <select 
+            id="sortSelect"
+            className="form-select" 
+            style={{ 
+              maxWidth: '250px',
+              cursor: 'pointer',
+              border: '2px solid #0d6efd',
+              boxShadow: '0 2px 4px rgba(13, 110, 253, 0.1)'
+            }}
+            value={sortBy}
+            onChange={(e) => handleSortChange(e.target.value)}
+          >
+            <option value="name">Name (A-Z)</option>
+            <option value="team">Team (A-Z)</option>
+            <option value="activity_date">Most Recent Activity</option>
+          </select>
+        </div>
+      </div>
+      
       {users.length === 0 ? (
         <div className="alert alert-info text-center" role="alert">
           No users found
         </div>
       ) : (
         <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-          {users.map(user => {
+          {sortedUsers.map(user => {
             // Determine team icon
             const isMarvel = user.team_name && user.team_name.toLowerCase().includes('marvel');
             const isDC = user.team_name && user.team_name.toLowerCase().includes('dc');
@@ -222,8 +314,72 @@ function Users() {
         </div>
       )}
       
-      <div className="mt-4">
-        <p className="text-muted">Total Users: <strong>{users.length}</strong></p>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="mt-4 d-flex justify-content-center align-items-center gap-2">
+          <button
+            className="btn btn-primary"
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            style={{
+              opacity: currentPage === 1 ? 0.5 : 1,
+              cursor: currentPage === 1 ? 'not-allowed' : 'pointer'
+            }}
+          >
+            &laquo; Previous
+          </button>
+          
+          <div className="d-flex gap-2">
+            {[...Array(totalPages)].map((_, index) => {
+              const pageNum = index + 1;
+              // Show first, last, current, and adjacent pages
+              if (
+                pageNum === 1 ||
+                pageNum === totalPages ||
+                (pageNum >= currentPage - 1 && pageNum <= currentPage + 1)
+              ) {
+                return (
+                  <button
+                    key={pageNum}
+                    className={`btn ${pageNum === currentPage ? 'btn-primary' : 'btn-outline-primary'}`}
+                    onClick={() => handlePageChange(pageNum)}
+                    style={{
+                      minWidth: '40px',
+                      fontWeight: pageNum === currentPage ? 'bold' : 'normal'
+                    }}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              } else if (
+                pageNum === currentPage - 2 ||
+                pageNum === currentPage + 2
+              ) {
+                return <span key={pageNum} className="px-2">...</span>;
+              }
+              return null;
+            })}
+          </div>
+          
+          <button
+            className="btn btn-primary"
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+            style={{
+              opacity: currentPage === totalPages ? 0.5 : 1,
+              cursor: currentPage === totalPages ? 'not-allowed' : 'pointer'
+            }}
+          >
+            Next &raquo;
+          </button>
+        </div>
+      )}
+      
+      <div className="mt-4 text-center">
+        <p className="text-muted">
+          Showing {users.length > 0 ? ((currentPage - 1) * pageSize + 1) : 0} - {Math.min(currentPage * pageSize, totalCount)} of <strong>{totalCount}</strong> users
+          {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+        </p>
       </div>
     </div>
   );
